@@ -8,8 +8,10 @@
 // background, and which functions should Phaser call to set things up.
 const config = {
   type: Phaser.AUTO,     // Let Phaser pick the best rendering method for the browser.
-  width: 480,            // Screen width in pixels (15 tiles wide x 32 pixels per tile).
-  height: 320,           // Screen height in pixels (10 tiles tall x 32 pixels per tile).
+  // The screen size is calculated from the map's dimensions (map.js), so
+  // the game window always matches however big the map currently is.
+  width: MAP_WIDTH * TILE_SIZE,
+  height: MAP_HEIGHT * TILE_SIZE,
   backgroundColor: '#3fa34d', // A placeholder grass-green so we know the game booted.
   parent: 'game-container',   // The <div> in index.html where the game canvas will be placed.
   // "Arcade Physics" is Phaser's simple built-in physics system. We turn it
@@ -89,9 +91,14 @@ function create() {
   // resets if you refresh the page).
   this.caughtFish = [];
 
+  // Center point of the screen, used below to position UI elements no
+  // matter how big the map/canvas currently is.
+  const screenCenterX = config.width / 2;
+  const screenCenterY = config.height / 2;
+
   // Text that shows "Press SPACE to fish" when facing water. Hidden by
   // default; update() decides each frame whether to show it.
-  this.fishPrompt = this.add.text(240, 8, 'Press SPACE to fish', {
+  this.fishPrompt = this.add.text(screenCenterX, 8, 'Press SPACE to fish', {
     fontSize: '14px',
     color: '#ffffff',
     backgroundColor: '#000000'
@@ -99,8 +106,8 @@ function create() {
 
   // The "You caught a ...!" popup: a dark box with text on top of it.
   // Both start hidden and only appear right after a successful catch.
-  this.catchBox = this.add.rectangle(240, 160, 320, 60, 0x000000, 0.85).setVisible(false);
-  this.catchText = this.add.text(240, 160, '', {
+  this.catchBox = this.add.rectangle(screenCenterX, screenCenterY, 320, 60, 0x000000, 0.85).setVisible(false);
+  this.catchText = this.add.text(screenCenterX, screenCenterY, '', {
     fontSize: '14px',
     color: '#ffffff',
     align: 'center',
@@ -110,7 +117,7 @@ function create() {
   // The FishDex: a full-screen overlay listing every fish caught so far.
   // Toggled on/off with the F key. Starts closed.
   this.fishDexOpen = false;
-  this.fishDexBox = this.add.rectangle(240, 160, 460, 300, 0x000000, 0.92).setVisible(false);
+  this.fishDexBox = this.add.rectangle(screenCenterX, screenCenterY, config.width - 40, config.height - 40, 0x000000, 0.92).setVisible(false);
   this.fishDexText = this.add.text(30, 20, '', {
     fontSize: '14px',
     color: '#ffffff',
