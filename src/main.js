@@ -1,7 +1,7 @@
 // main.js
-// This is the very first script of our game. Right now it just proves that
-// Phaser (the game engine) is working by opening a window with a solid
-// green background and a line of text on it.
+// This is the main game script. It sets up the Phaser game and draws our
+// tiny tile map (see map.js) using colored squares as placeholders for
+// real pixel art we'll add later.
 
 // A Phaser game always starts with a "config" object. Think of this as the
 // game's settings sheet: how big is the screen, what color is the
@@ -26,10 +26,22 @@ function preload() {}
 // create() runs once, right after preload() finishes. This is where we set
 // up anything that should exist when the game starts.
 function create() {
-  this.add.text(16, 16, 'Fishing RPG - Milestone 1', {
-    fontSize: '16px',
-    color: '#ffffff'
-  });
+  // Draw the tile map: go through every row and column of MAP_GRID (from
+  // map.js) and draw one colored square for each tile.
+  for (let row = 0; row < MAP_HEIGHT; row++) {
+    for (let col = 0; col < MAP_WIDTH; col++) {
+      const tileType = MAP_GRID[row][col];
+      const color = TILE_COLORS[tileType];
+
+      // Each tile's top-left corner is at (col * TILE_SIZE, row * TILE_SIZE).
+      const x = col * TILE_SIZE;
+      const y = row * TILE_SIZE;
+
+      // Phaser draws rectangles from their CENTER point, so we shift by
+      // half a tile to line them up neatly into a grid with no gaps.
+      this.add.rectangle(x + TILE_SIZE / 2, y + TILE_SIZE / 2, TILE_SIZE, TILE_SIZE, color);
+    }
+  }
 }
 
 // update() runs continuously, about 60 times per second, for as long as the

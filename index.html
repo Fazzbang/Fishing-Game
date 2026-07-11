@@ -27,7 +27,9 @@
 
   <!-- Phaser 3, the game engine, loaded from a public CDN (no install needed). -->
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
-  <!-- Our own game code. Must be loaded AFTER Phaser above. -->
+  <!-- Our map data, loaded before main.js since main.js uses it. -->
+  <script src="src/map.js"></script>
+  <!-- Our own game code. Must be loaded AFTER Phaser and map.js above. -->
   <script src="src/main.js"></script>
 </body>
 </html>
