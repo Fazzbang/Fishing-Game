@@ -77,8 +77,9 @@ function create() {
   // if the up/down/left/right arrow keys are currently held down.
   this.cursors = this.input.keyboard.createCursorKeys();
 
-  // The SPACE key, used for fishing.
+  // The SPACE key (fishing) and F key (opening/closing the FishDex).
   this.spaceKey = this.input.keyboard.addKey('SPACE');
+  this.fKey = this.input.keyboard.addKey('F');
 
   // Which way the player is currently facing ('up', 'down', 'left' or
   // 'right'). Starts facing down, like most Game Boy RPGs do.
@@ -105,11 +106,52 @@ function create() {
     align: 'center',
     wordWrap: { width: 280 }
   }).setOrigin(0.5).setVisible(false);
+
+  // The FishDex: a full-screen overlay listing every fish caught so far.
+  // Toggled on/off with the F key. Starts closed.
+  this.fishDexOpen = false;
+  this.fishDexBox = this.add.rectangle(240, 160, 460, 300, 0x000000, 0.92).setVisible(false);
+  this.fishDexText = this.add.text(30, 20, '', {
+    fontSize: '14px',
+    color: '#ffffff',
+    lineSpacing: 6
+  }).setVisible(false);
+}
+
+// Rebuilds the FishDex text from whatever fish have been caught so far.
+function buildFishDexText(scene) {
+  let text = 'FishDex (press F to close)\n\n';
+
+  if (scene.caughtFish.length === 0) {
+    text += 'No fish caught yet - go fish near the water!';
+  } else {
+    scene.caughtFish.forEach((fishName, index) => {
+      text += (index + 1) + '. ' + fishName + '\n';
+    });
+  }
+
+  return text;
 }
 
 // update() runs continuously, about 60 times per second, for as long as the
 // game is running. Here we read the arrow keys and move the player.
 function update() {
+  // Pressing F opens or closes the FishDex. While it's open, we skip all
+  // movement and fishing so the player doesn't wander around underneath it.
+  if (Phaser.Input.Keyboard.JustDown(this.fKey)) {
+    this.fishDexOpen = !this.fishDexOpen;
+    this.fishDexBox.setVisible(this.fishDexOpen);
+    this.fishDexText.setVisible(this.fishDexOpen);
+    if (this.fishDexOpen) {
+      this.fishDexText.setText(buildFishDexText(this));
+    }
+  }
+
+  if (this.fishDexOpen) {
+    this.player.body.setVelocity(0, 0);
+    return;
+  }
+
   // Start each frame assuming the player isn't moving, then turn on
   // whichever direction's key is currently held down. We also remember the
   // last direction pressed as this.facing, so we know which way the
