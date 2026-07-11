@@ -7,12 +7,13 @@
 // reeling minigame (see fishing_minigame.js) feels different per species:
 //   zoneFraction - how much of the reeling bar counts as a "hit" (smaller = harder)
 //   speed        - how fast the marker slides back and forth, in pixels/second (faster = harder)
+//   zoneSpeed    - how fast the catch zone itself drifts back and forth (faster = harder)
 //   hitsNeeded   - how many successful hits are needed to land the fish
 //   attempts     - how many total tries you get before the fish escapes
 const FISH_LIST = [
-  { name: 'Goldfish',     zoneFraction: 0.35, speed: 130, hitsNeeded: 3, attempts: 5 }, // 2 misses allowed
-  { name: 'Common Carp',  zoneFraction: 0.22, speed: 170, hitsNeeded: 3, attempts: 4 }, // 1 miss allowed
-  { name: 'Redfin Perch', zoneFraction: 0.14, speed: 210, hitsNeeded: 3, attempts: 3 }  // 0 misses allowed
+  { name: 'Goldfish',     zoneFraction: 0.35, speed: 130, zoneSpeed: 50,  hitsNeeded: 3, attempts: 5 }, // 2 misses allowed
+  { name: 'Common Carp',  zoneFraction: 0.22, speed: 170, zoneSpeed: 90,  hitsNeeded: 3, attempts: 4 }, // 1 miss allowed
+  { name: 'Redfin Perch', zoneFraction: 0.14, speed: 210, zoneSpeed: 140, hitsNeeded: 3, attempts: 3 }  // 0 misses allowed
 ];
 
 // Picks and returns one random fish (an object from FISH_LIST above) that
