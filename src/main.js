@@ -76,26 +76,103 @@ function create() {
   // createCursorKeys() gives us an object we can check every frame to see
   // if the up/down/left/right arrow keys are currently held down.
   this.cursors = this.input.keyboard.createCursorKeys();
+
+  // The SPACE key, used for fishing.
+  this.spaceKey = this.input.keyboard.addKey('SPACE');
+
+  // Which way the player is currently facing ('up', 'down', 'left' or
+  // 'right'). Starts facing down, like most Game Boy RPGs do.
+  this.facing = 'down';
+
+  // The in-memory list of every fish caught so far (no saving yet - this
+  // resets if you refresh the page).
+  this.caughtFish = [];
+
+  // Text that shows "Press SPACE to fish" when facing water. Hidden by
+  // default; update() decides each frame whether to show it.
+  this.fishPrompt = this.add.text(240, 8, 'Press SPACE to fish', {
+    fontSize: '14px',
+    color: '#ffffff',
+    backgroundColor: '#000000'
+  }).setOrigin(0.5, 0).setVisible(false);
+
+  // The "You caught a ...!" popup: a dark box with text on top of it.
+  // Both start hidden and only appear right after a successful catch.
+  this.catchBox = this.add.rectangle(240, 160, 320, 60, 0x000000, 0.85).setVisible(false);
+  this.catchText = this.add.text(240, 160, '', {
+    fontSize: '14px',
+    color: '#ffffff',
+    align: 'center',
+    wordWrap: { width: 280 }
+  }).setOrigin(0.5).setVisible(false);
 }
 
 // update() runs continuously, about 60 times per second, for as long as the
 // game is running. Here we read the arrow keys and move the player.
 function update() {
   // Start each frame assuming the player isn't moving, then turn on
-  // whichever direction's key is currently held down.
+  // whichever direction's key is currently held down. We also remember the
+  // last direction pressed as this.facing, so we know which way the
+  // player is "looking" even while standing still.
   this.player.body.setVelocity(0, 0);
 
   if (this.cursors.left.isDown) {
     this.player.body.setVelocityX(-PLAYER_SPEED);
+    this.facing = 'left';
   } else if (this.cursors.right.isDown) {
     this.player.body.setVelocityX(PLAYER_SPEED);
+    this.facing = 'right';
   }
 
   if (this.cursors.up.isDown) {
     this.player.body.setVelocityY(-PLAYER_SPEED);
+    this.facing = 'up';
   } else if (this.cursors.down.isDown) {
     this.player.body.setVelocityY(PLAYER_SPEED);
+    this.facing = 'down';
   }
+
+  // Figure out which tile the player is standing on, and which tile is
+  // directly in front of them based on this.facing.
+  const playerCol = Math.floor(this.player.x / TILE_SIZE);
+  const playerRow = Math.floor(this.player.y / TILE_SIZE);
+
+  let targetCol = playerCol;
+  let targetRow = playerRow;
+  if (this.facing === 'left') targetCol -= 1;
+  else if (this.facing === 'right') targetCol += 1;
+  else if (this.facing === 'up') targetRow -= 1;
+  else if (this.facing === 'down') targetRow += 1;
+
+  // Check that the tile in front is actually inside the map, then check
+  // whether it's a water tile (tile type 2 - see map.js).
+  const inBounds = targetRow >= 0 && targetRow < MAP_HEIGHT && targetCol >= 0 && targetCol < MAP_WIDTH;
+  const facingWater = inBounds && MAP_GRID[targetRow][targetCol] === 2;
+
+  this.fishPrompt.setVisible(facingWater);
+
+  // JustDown is true for exactly one frame - the moment SPACE is first
+  // pressed - so holding the key down doesn't catch fish over and over.
+  if (facingWater && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
+    catchFish(this);
+  }
+}
+
+// Runs the "catch a fish" logic: picks a random fish, remembers it, and
+// shows a popup message for a couple of seconds.
+function catchFish(scene) {
+  const fishName = catchRandomFish(); // defined in fish.js
+  scene.caughtFish.push(fishName);
+
+  scene.catchText.setText('You caught a ' + fishName + '!');
+  scene.catchBox.setVisible(true);
+  scene.catchText.setVisible(true);
+
+  // Hide the popup again after 2 seconds.
+  scene.time.delayedCall(2000, () => {
+    scene.catchBox.setVisible(false);
+    scene.catchText.setVisible(false);
+  });
 }
 
 // This line actually creates the game using the settings above.
