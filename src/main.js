@@ -1,7 +1,7 @@
 // main.js
 // This is the main game script. It sets up the Phaser game and draws our
-// tiny tile map (see map.js) using colored squares as placeholders for
-// real pixel art we'll add later.
+// tile map (see map.js) using real pixel art tile images from
+// assets/tileset.png (grass, path, water, sand, flowers, fence).
 
 // A Phaser game always starts with a "config" object. Think of this as the
 // game's settings sheet: how big is the screen, what color is the
@@ -12,8 +12,11 @@ const config = {
   // the game window always matches however big the map currently is.
   width: MAP_WIDTH * TILE_SIZE,
   height: MAP_HEIGHT * TILE_SIZE,
-  backgroundColor: '#3fa34d', // A placeholder grass-green so we know the game booted.
+  backgroundColor: '#3fa34d', // Grass-green fallback, shown briefly before the map draws in.
   parent: 'game-container',   // The <div> in index.html where the game canvas will be placed.
+  // Our art is drawn small (16x16) and scaled up - pixelArt keeps that
+  // scaling crisp and blocky instead of blurry.
+  pixelArt: true,
   // "Arcade Physics" is Phaser's simple built-in physics system. We turn it
   // on so we can use its automatic "don't let the player leave the map"
   // feature, instead of writing that math ourselves.
@@ -32,29 +35,52 @@ const config = {
 
 const PLAYER_SPEED = 120; // pixels per second the player moves when a key is held
 
-// preload() runs first. This is where we would load image files.
-// We don't have any real art yet, so this is empty for now.
-function preload() {}
+// preload() runs first and loads all our image files before anything else
+// happens, so they're ready by the time create() tries to use them.
+function preload() {
+  // Our tileset is one image strip containing all 6 ground tiles side by
+  // side, each 16x16 pixels. Loading it as a "spritesheet" lets us pick out
+  // one tile by number (frame 0, frame 1, etc.) - and those numbers line up
+  // exactly with the numbers used in MAP_GRID (map.js).
+  this.load.spritesheet('tiles', 'assets/tileset.png', { frameWidth: 16, frameHeight: 16 });
+
+  this.load.image('shack', 'assets/shack.png');
+  this.load.image('player', 'assets/player.png');
+}
 
 // create() runs once, right after preload() finishes. This is where we set
 // up anything that should exist when the game starts.
 function create() {
   // Draw the tile map: go through every row and column of MAP_GRID (from
-  // map.js) and draw one colored square for each tile.
+  // map.js) and place the matching tile image for each one.
   for (let row = 0; row < MAP_HEIGHT; row++) {
     for (let col = 0; col < MAP_WIDTH; col++) {
       const tileType = MAP_GRID[row][col];
-      const color = TILE_COLORS[tileType];
 
       // Each tile's top-left corner is at (col * TILE_SIZE, row * TILE_SIZE).
       const x = col * TILE_SIZE;
       const y = row * TILE_SIZE;
 
-      // Phaser draws rectangles from their CENTER point, so we shift by
-      // half a tile to line them up neatly into a grid with no gaps.
-      this.add.rectangle(x + TILE_SIZE / 2, y + TILE_SIZE / 2, TILE_SIZE, TILE_SIZE, color);
+      // Phaser draws images from their CENTER point, so we shift by half a
+      // tile to line them up neatly into a grid with no gaps. setDisplaySize
+      // scales our 16x16 source art up to fill a 32x32 screen tile.
+      this.add.image(x + TILE_SIZE / 2, y + TILE_SIZE / 2, 'tiles', tileType)
+        .setDisplaySize(TILE_SIZE, TILE_SIZE);
     }
   }
+
+  // A decorative fishing shack, sitting on the grass near the top of the
+  // map (spanning the 2x2 tile area at column 6-7, row 1-2). It's just a
+  // picture - not something the player interacts with yet.
+  const shackTileCol = 6;
+  const shackTileRow = 1;
+  const shackWidth = TILE_SIZE * 2;
+  const shackHeight = TILE_SIZE * 2;
+  this.add.image(
+    shackTileCol * TILE_SIZE + shackWidth / 2,
+    shackTileRow * TILE_SIZE + shackHeight / 2,
+    'shack'
+  ).setDisplaySize(shackWidth, shackHeight);
 
   // The map is MAP_WIDTH x MAP_HEIGHT tiles, so its full size in pixels is:
   const mapPixelWidth = MAP_WIDTH * TILE_SIZE;
@@ -64,15 +90,12 @@ function create() {
   // with collideWorldBounds turned on won't be able to cross this box.
   this.physics.world.setBounds(0, 0, mapPixelWidth, mapPixelHeight);
 
-  // Create the player as a simple colored square, positioned on a grass
-  // tile near the top-left of the map (column 2, row 6).
+  // Create the player, positioned on a grass tile near the top-left of the
+  // map (column 2, row 6). physics.add.image() creates it already wired up
+  // to the physics system, so it can move and collide with the map edges.
   const startX = 2 * TILE_SIZE + TILE_SIZE / 2;
   const startY = 6 * TILE_SIZE + TILE_SIZE / 2;
-  this.player = this.add.rectangle(startX, startY, 24, 24, 0xffcc00);
-
-  // this.physics.add.existing() upgrades our plain rectangle into one the
-  // physics system can move around and check collisions for.
-  this.physics.add.existing(this.player);
+  this.player = this.physics.add.image(startX, startY, 'player').setDisplaySize(28, 28);
   this.player.body.setCollideWorldBounds(true); // can't leave the map bounds set above
 
   // createCursorKeys() gives us an object we can check every frame to see
