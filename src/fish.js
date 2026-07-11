@@ -10,9 +10,9 @@
 //   hitsNeeded   - how many successful hits are needed to land the fish
 //   attempts     - how many total tries you get before the fish escapes
 const FISH_LIST = [
-  { name: 'Goldfish',     zoneFraction: 0.55, speed: 90,  hitsNeeded: 2, attempts: 5 },
-  { name: 'Common Carp',  zoneFraction: 0.35, speed: 140, hitsNeeded: 3, attempts: 5 },
-  { name: 'Redfin Perch', zoneFraction: 0.20, speed: 190, hitsNeeded: 3, attempts: 4 }
+  { name: 'Goldfish',     zoneFraction: 0.35, speed: 130, hitsNeeded: 3, attempts: 5 }, // 2 misses allowed
+  { name: 'Common Carp',  zoneFraction: 0.22, speed: 170, hitsNeeded: 3, attempts: 4 }, // 1 miss allowed
+  { name: 'Redfin Perch', zoneFraction: 0.14, speed: 210, hitsNeeded: 3, attempts: 3 }  // 0 misses allowed
 ];
 
 // Picks and returns one random fish (an object from FISH_LIST above) that
