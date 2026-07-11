@@ -146,6 +146,10 @@ function create() {
     color: '#ffffff',
     lineSpacing: 6
   }).setVisible(false);
+
+  // Sets up the reeling minigame's visuals (see fishing_minigame.js). It
+  // starts hidden and only appears while actually reeling in a fish.
+  createFishingMinigameUI(this);
 }
 
 // Rebuilds the FishDex text from whatever fish have been caught so far.
@@ -164,11 +168,13 @@ function buildFishDexText(scene) {
 }
 
 // update() runs continuously, about 60 times per second, for as long as the
-// game is running. Here we read the arrow keys and move the player.
-function update() {
-  // Pressing F opens or closes the FishDex. While it's open, we skip all
-  // movement and fishing so the player doesn't wander around underneath it.
-  if (Phaser.Input.Keyboard.JustDown(this.fKey)) {
+// game is running. Phaser passes it the current time and the delta (how
+// many milliseconds passed since the last frame) - we need delta to move
+// the reeling minigame's marker at a steady speed.
+function update(time, delta) {
+  // Pressing F opens or closes the FishDex (but not while mid-catch - that
+  // would be a confusing time to check your collection).
+  if (!this.fishingMinigame && Phaser.Input.Keyboard.JustDown(this.fKey)) {
     this.fishDexOpen = !this.fishDexOpen;
     this.fishDexBox.setVisible(this.fishDexOpen);
     this.fishDexText.setVisible(this.fishDexOpen);
@@ -179,6 +185,14 @@ function update() {
 
   if (this.fishDexOpen) {
     this.player.body.setVelocity(0, 0);
+    return;
+  }
+
+  // While a fish is on the line, hand control over to the reeling minigame
+  // (fishing_minigame.js) instead of moving the player around.
+  if (this.fishingMinigame) {
+    this.player.body.setVelocity(0, 0);
+    updateFishingMinigame(this, delta);
     return;
   }
 
@@ -224,27 +238,10 @@ function update() {
   this.fishPrompt.setVisible(facingWater);
 
   // JustDown is true for exactly one frame - the moment SPACE is first
-  // pressed - so holding the key down doesn't catch fish over and over.
+  // pressed - so holding the key down doesn't start multiple minigames.
   if (facingWater && Phaser.Input.Keyboard.JustDown(this.spaceKey)) {
-    catchFish(this);
+    startFishingMinigame(this); // defined in fishing_minigame.js
   }
-}
-
-// Runs the "catch a fish" logic: picks a random fish, remembers it, and
-// shows a popup message for a couple of seconds.
-function catchFish(scene) {
-  const fishName = catchRandomFish(); // defined in fish.js
-  scene.caughtFish.push(fishName);
-
-  scene.catchText.setText('You caught a ' + fishName + '!');
-  scene.catchBox.setVisible(true);
-  scene.catchText.setVisible(true);
-
-  // Hide the popup again after 2 seconds.
-  scene.time.delayedCall(2000, () => {
-    scene.catchBox.setVisible(false);
-    scene.catchText.setVisible(false);
-  });
 }
 
 // This line actually creates the game using the settings above.
