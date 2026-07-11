@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aussie Fishing RPG</title>
+  <style>
+    /* Basic page styling: dark background, game centered in the middle */
+    body {
+      margin: 0;
+      background: #111111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: sans-serif;
+    }
+    /* "pixelated" keeps our chunky pixel art crisp instead of blurry when scaled */
+    canvas {
+      image-rendering: pixelated;
+    }
+  </style>
+</head>
+<body>
+  <!-- Phaser will build the game's <canvas> element inside this div. -->
+  <div id="game-container"></div>
+
+  <!-- Phaser 3, the game engine, loaded from a public CDN (no install needed). -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+  <!-- Our own game code. Must be loaded AFTER Phaser above. -->
+  <script src="src/main.js"></script>
+</body>
+</html>
