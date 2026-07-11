@@ -12,12 +12,23 @@ const config = {
   height: 320,           // Screen height in pixels (10 tiles tall x 32 pixels per tile).
   backgroundColor: '#3fa34d', // A placeholder grass-green so we know the game booted.
   parent: 'game-container',   // The <div> in index.html where the game canvas will be placed.
+  // "Arcade Physics" is Phaser's simple built-in physics system. We turn it
+  // on so we can use its automatic "don't let the player leave the map"
+  // feature, instead of writing that math ourselves.
+  physics: {
+    default: 'arcade',
+    arcade: {
+      debug: false // set this to true later if we ever want to see collision boxes
+    }
+  },
   scene: {
     preload: preload,
     create: create,
     update: update
   }
 };
+
+const PLAYER_SPEED = 120; // pixels per second the player moves when a key is held
 
 // preload() runs first. This is where we would load image files.
 // We don't have any real art yet, so this is empty for now.
@@ -42,11 +53,50 @@ function create() {
       this.add.rectangle(x + TILE_SIZE / 2, y + TILE_SIZE / 2, TILE_SIZE, TILE_SIZE, color);
     }
   }
+
+  // The map is MAP_WIDTH x MAP_HEIGHT tiles, so its full size in pixels is:
+  const mapPixelWidth = MAP_WIDTH * TILE_SIZE;
+  const mapPixelHeight = MAP_HEIGHT * TILE_SIZE;
+
+  // Tell the physics system where the "walls" of the world are. Anything
+  // with collideWorldBounds turned on won't be able to cross this box.
+  this.physics.world.setBounds(0, 0, mapPixelWidth, mapPixelHeight);
+
+  // Create the player as a simple colored square, positioned on a grass
+  // tile near the top-left of the map (column 2, row 6).
+  const startX = 2 * TILE_SIZE + TILE_SIZE / 2;
+  const startY = 6 * TILE_SIZE + TILE_SIZE / 2;
+  this.player = this.add.rectangle(startX, startY, 24, 24, 0xffcc00);
+
+  // this.physics.add.existing() upgrades our plain rectangle into one the
+  // physics system can move around and check collisions for.
+  this.physics.add.existing(this.player);
+  this.player.body.setCollideWorldBounds(true); // can't leave the map bounds set above
+
+  // createCursorKeys() gives us an object we can check every frame to see
+  // if the up/down/left/right arrow keys are currently held down.
+  this.cursors = this.input.keyboard.createCursorKeys();
 }
 
 // update() runs continuously, about 60 times per second, for as long as the
-// game is running. This is where movement and game logic will happen later.
-function update() {}
+// game is running. Here we read the arrow keys and move the player.
+function update() {
+  // Start each frame assuming the player isn't moving, then turn on
+  // whichever direction's key is currently held down.
+  this.player.body.setVelocity(0, 0);
+
+  if (this.cursors.left.isDown) {
+    this.player.body.setVelocityX(-PLAYER_SPEED);
+  } else if (this.cursors.right.isDown) {
+    this.player.body.setVelocityX(PLAYER_SPEED);
+  }
+
+  if (this.cursors.up.isDown) {
+    this.player.body.setVelocityY(-PLAYER_SPEED);
+  } else if (this.cursors.down.isDown) {
+    this.player.body.setVelocityY(PLAYER_SPEED);
+  }
+}
 
 // This line actually creates the game using the settings above.
 const game = new Phaser.Game(config);
